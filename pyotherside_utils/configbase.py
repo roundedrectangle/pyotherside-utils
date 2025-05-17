@@ -103,4 +103,4 @@ class JSONConfigBase(ConfigBase):
 
     def _dump(self, data) -> tuple[bool, Any]:
         # if something is not JSON serializable (TypeError), it is probably a logic error, so we don't check it
-        return True, json.dumps(self._data, separators=(',', ':'))
+        return True, json.dumps(data, separators=(',', ':'))
