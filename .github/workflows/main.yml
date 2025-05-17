@@ -31,7 +31,10 @@ jobs:
         run: |
           set -x
           cd dist
-          gh release delete-asset latest * -y
+          for asset in *
+          do
+            gh release delete-asset latest "$asset" -y
+          done
           gh release upload latest *
           cd ..
         env:
