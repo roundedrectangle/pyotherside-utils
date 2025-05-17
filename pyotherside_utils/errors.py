@@ -7,7 +7,7 @@ from enum import Enum
 
 from . import qsend
 
-T = TypeVar("T", str, Callable)
+T = TypeVar("T", str, Callable[[Exception], str])
 
 __ALL__ = [
     'DataFromException',
@@ -32,24 +32,30 @@ class DataFromException(Enum):
             return tb.format_exc()
         return ''
 
-def ensure_data_from_exc(data: T | DataFromException | Any, e: Exception) -> T | str:
-    return data.to_data(e) if isinstance(data, DataFromException) else data
+def ensure_data_from_exc(data: T | DataFromException | Any, e: Exception, check_callable = False) -> T | str:
+    if isinstance(data, DataFromException):
+        return data.to_data(e)
+    if check_callable and callable(data):
+        return str(data(e))
+    return data
 
-def show_error(name, info = ''):
-    qsend('error', name, str(info))
+def show_error(name, info = '', other = None):
+    qsend('error', name, str(info), other)
 
 @dataclass
 class ExceptionHandlingInfo:
     name: str
     info: DataFromException | str | Callable[[Exception], str] = ''
+    other: DataFromException | str | Callable[[Exception], str] = ''
     prepend_info: str = ''
     return_on_exc: DataFromException | Any = None
 
     def show(self, e):
-        info = ensure_data_from_exc(self.info, e)
-        if callable(info):
-            info = info(e)
-        show_error(self.name, self.prepend_info + info)
+        show_error(
+            self.name,
+            self.prepend_info + ensure_data_from_exc(self.info, e, check_callable=True),
+            ensure_data_from_exc(self.other, e, check_callable=True)
+        )
 
 # def exception_safe(exc: type[Exception] | tuple[type[Exception]], name = None, other: DataFromException | Any = None, return_on_exc: DataFromException | Any = None):
 def exception_safe(exceptions: dict[type[Exception], ExceptionHandlingInfo | str]):
