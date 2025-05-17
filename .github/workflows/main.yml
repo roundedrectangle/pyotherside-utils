@@ -24,21 +24,10 @@ jobs:
           name: python-package-distributions
           path: dist/
       
-      - name: Create release
-        #if: startsWith(github.ref, 'refs/tags/')
-        # `set -x` prints commands before execution
-        # `"${GITHUB_REF##*/}"` - tag name
-        run: |
-          set -x
-          git push origin :refs/tags/latest
-          git tag -fa latest -m latest
-          git push origin --tags -f
-          cd dist
-          for asset in *
-          do
-            gh release delete-asset latest "$asset" -y
-          done
-          gh release upload latest *
-          cd ..
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: pyTooling/Actions/releaser@r0
+        with:
+          tag: latest
+          #rm: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          files: |
+            dist/*
