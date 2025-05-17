@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 import json
 
 from . import qsend, show_error
@@ -13,6 +13,7 @@ class ConfigBase(ABC):
     _extension: str = 'json'
     _data: None | Any = None
     _default: None | Any = None
+    _default_factory: None | Callable = None
 
     def show_error(self, name: str, save=False):
         show_error(f'config{"Save" if save else "Load"}{name}', self._name)
@@ -34,7 +35,7 @@ class ConfigBase(ABC):
             self.save()
 
     def reset(self, save=True):
-        self._data = self._default
+        self._data = self._default_factory() if self._default_factory is not None else self._default
         if save:
             self.save()
     
