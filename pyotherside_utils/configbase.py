@@ -3,7 +3,9 @@ from pathlib import Path
 from typing import Any, Callable
 import json
 
-from . import qsend, show_error
+from pyotherside_utils.errors import ExceptionHandlingInfo
+
+from . import qsend, show_error, exception_safe
 
 __ALL__ = ['ConfigBase', 'JSONConfigBase']
 
@@ -40,8 +42,8 @@ class ConfigBase(ABC):
             self.save()
     
     @abstractmethod
-    def _load(self, data: str) -> bool:
-        """When implementing a config backend, this method should save the data in data argument to self._data in decoded format."""
+    def _load(self, data: str) -> tuple[bool, Any]:
+        """When implementing a config backend, this method should return a tuple of the result as a boolean and the encoded data in data argument decoded."""
         ...
 
     @abstractmethod
@@ -58,7 +60,10 @@ class ConfigBase(ABC):
         except PermissionError:
             self.show_error('Permissions')
             return
-        return self._load(data)
+        state, data = self._load(data)
+        if state:
+            self._data = data
+        return state
 
     def save(self):
         state, data = self._dump(self._data)
@@ -81,15 +86,16 @@ class ConfigBase(ABC):
         return statement
 
 class JSONConfigBase(ConfigBase):
+    """Example configuration backend implementation. Parses objects as JSON."""
+
     _extension = 'json'
 
     def _load(self, data):
         try:
-            self._data = json.loads(data)
+            return True, json.loads(data)
         except json.JSONDecodeError:
             self.show_error('JSON')
-            return False
-        return True
+        return False, None
 
     def _dump(self, data):
         # if something is not JSON serializable (TypeError), it is probably a logic error, so we don't check it
