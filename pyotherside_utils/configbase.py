@@ -93,12 +93,12 @@ class JSONConfigBase(ConfigBase):
 
     _extension = 'json'
 
-    def _load(self, data):
+    def _load(self, data) -> tuple[bool, Any]:
         @exception_safe({json.JSONDecodeError: ExceptionHandlingInfo(*self.get_error('JSON'), return_on_exc=(False, None))})
         def wrapper():
             return True, json.loads(data)
         return wrapper()
 
-    def _dump(self, data):
+    def _dump(self, data) -> tuple[bool, Any]:
         # if something is not JSON serializable (TypeError), it is probably a logic error, so we don't check it
         return True, json.dumps(self._data, separators=(',', ':'))
