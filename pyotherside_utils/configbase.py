@@ -17,8 +17,11 @@ class ConfigBase(ABC):
     _default: None | Any = None
     _default_factory: None | Callable = None
 
+    def get_error(self, name: str, save=False):
+        return f'config{"Save" if save else "Load"}{name}', self._name
+
     def show_error(self, name: str, save=False):
-        show_error(f'config{"Save" if save else "Load"}{name}', self._name)
+        show_error(self.get_error(name, save))
 
     @property
     def _path(self):
@@ -91,11 +94,10 @@ class JSONConfigBase(ConfigBase):
     _extension = 'json'
 
     def _load(self, data):
-        try:
+        @exception_safe({json.JSONDecodeError: ExceptionHandlingInfo(*self.get_error('JSON'), return_on_exc=(False, None))})
+        def wrapper():
             return True, json.loads(data)
-        except json.JSONDecodeError:
-            self.show_error('JSON')
-        return False, None
+        return wrapper()
 
     def _dump(self, data):
         # if something is not JSON serializable (TypeError), it is probably a logic error, so we don't check it
