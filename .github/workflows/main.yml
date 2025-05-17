@@ -30,6 +30,9 @@ jobs:
         # `"${GITHUB_REF##*/}"` - tag name
         run: |
           set -x
+          git push origin :refs/tags/latest
+          git tag -fa latest -m latest
+          git push origin --tags -f
           cd dist
           for asset in *
           do
