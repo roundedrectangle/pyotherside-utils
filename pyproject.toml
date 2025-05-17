@@ -1,6 +1,6 @@
 [project]
 name = "pyotherside_utils"
-version = "0.2"
+version = "1.0"
 authors = [
   { name="roundedrectangle" },
 ]

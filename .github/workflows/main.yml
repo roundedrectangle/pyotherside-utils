@@ -25,14 +25,11 @@ jobs:
           path: dist/
       
       - name: Create release
-        if: startsWith(github.ref, 'refs/tags/')
+        #if: startsWith(github.ref, 'refs/tags/')
+        # `set -x` prints commands before execution
+        # `"${GITHUB_REF##*/}"` - tag name
         run: |
           set -x
-          assets=()
-          for asset in dist/*; do
-            assets+=("$asset")
-          done
-          tag_name="${GITHUB_REF##*/}"
-          gh release create "$tag_name" "${assets[@]}"
+          gh release upload latest dist/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
