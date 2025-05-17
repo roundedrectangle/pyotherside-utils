@@ -66,6 +66,8 @@ class ConfigBase(ABC):
         state, data = self._load(data)
         if state:
             self._data = data
+        else:
+            self.reset()
         return state
 
     def save(self):
