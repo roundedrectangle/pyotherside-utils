@@ -10,8 +10,8 @@ __ALL__ = ['TemporaryManager']
 class TemporaryManager(DownloadManager):
     """HACK: StandardPaths.Temporary uses private-tmp (in other words /tmp is separated between apps in sailijail), so we manage our own temporary folder"""
 
-    def __init__(self, cache: Path | str, proxy: str | None = None):
-        super().__init__(proxy)
+    def __init__(self, cache: Path | str, proxy: str | None = None, user_agent: str | None = None):
+        super().__init__(proxy, user_agent)
         self.temp = Path(cache) / 'temporary'
         self.clear_temporary()
         self.recreate_temporary()

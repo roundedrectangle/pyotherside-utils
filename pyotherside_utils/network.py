@@ -1,10 +1,19 @@
 from __future__ import annotations
 
 import os, shutil
+import re
 from pathlib import Path
 import urllib.parse, urllib.request, urllib.error
 
 from . import show_error
+
+def generate_headers(user_agent=None):
+    return {
+        "User-Agent": "python-requests/2.32.3" if user_agent is None else user_agent,
+        "Accept-Encoding": "gzip,deflate",
+        "Accept": "*/*",
+        "Connection": "keep-alive",
+    }
 
 def convert_proxy(proxy):
     if not proxy:
@@ -23,11 +32,11 @@ def isurl(obj: str):
 
 DOWNLOAD_CHUNK_SIZE = 1024
 
-def download(url, proxies: dict | None = None):
+def download(url, proxies=None, user_agent=None):
     """Returns same as urllib.request.urlopen() or None if URL is invalid"""
     try:
         opener = urllib.request.build_opener(urllib.request.ProxyHandler(proxies))
-        r = opener.open(str(url))
+        r = opener.open(urllib.request.Request(str(url), headers=generate_headers(user_agent)))
         if r.status != 200: return
         return r
     except urllib.error.URLError as e:
@@ -35,8 +44,8 @@ def download(url, proxies: dict | None = None):
     except Exception as e:
         show_error('cache', f'{type(e)}: {e}')
 
-def download_save(url, destination: Path | str, proxies: dict | None = None):
-    r = download(url, proxies)
+def download_save(url, destination: Path | str, proxies: dict | None = None, user_agent: str | None = None):
+    r = download(url, proxies, user_agent)
     if r:
         with open(destination, 'wb') as f:
             shutil.copyfileobj(r, f, DOWNLOAD_CHUNK_SIZE)
@@ -65,10 +74,11 @@ class DownloadManager:
                 "https": value,
             }
     
-    def __init__(self, proxy: str | None = None):
+    def __init__(self, proxy: str | None = None, user_agent: str | None = None):
         self.proxies = {}
         self._proxy: str | None = None
         self.proxy = proxy
+        self.user_agent = user_agent
     
     def download_save(self, url, dest):
-        return download_save(url, dest, self.proxies)
+        return download_save(url, dest, self.proxies, self.user_agent)

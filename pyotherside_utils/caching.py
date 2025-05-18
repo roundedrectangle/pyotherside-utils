@@ -46,8 +46,9 @@ class CacherBase(DownloadManager):
         update_period: timedelta | int | None,
         update_period_mapping: Iterable[timedelta | None] = DefaultUpdatePeriodMapping,
         proxy: str | None = None,
+        user_agent: str | None = None,
     ):
-        super().__init__(proxy)
+        super().__init__(proxy, user_agent)
 
         self._update_period = None
         self.update_period_mapping = update_period_mapping
