@@ -21,7 +21,7 @@ def isurl(obj: str):
 
 DOWNLOAD_CHUNK_SIZE = 1024
 
-def download(url, proxies: dict | None):
+def download(url, proxies: dict | None = None):
     """Returns same as urllib.request.urlopen() or None if URL is invalid"""
     try:
         opener = urllib.request.build_opener(urllib.request.ProxyHandler(proxies))
@@ -33,7 +33,7 @@ def download(url, proxies: dict | None):
     except Exception as e:
         show_error('cache', f'{type(e)}: {e}')
 
-def download_save(url, destination: Path | str, proxies: dict | None):
+def download_save(url, destination: Path | str, proxies: dict | None = None):
     r = download(url, proxies)
     if r:
         with open(destination, 'wb') as f:
