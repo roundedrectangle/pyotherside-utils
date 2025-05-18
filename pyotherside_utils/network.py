@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os, shutil
 from pathlib import Path
 import urllib.parse, urllib.request, urllib.error
