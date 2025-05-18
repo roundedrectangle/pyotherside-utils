@@ -1,9 +1,11 @@
+from typing import Union
+from pathlib import Path
+import shutil
 import urllib.parse
+import urllib.request
+import urllib.error
 
-__ALL__ = [
-    'convert_proxy',
-    'isurl',
-]
+from . import qsend
 
 def convert_proxy(proxy):
     if not proxy:
@@ -19,3 +21,49 @@ def convert_proxy(proxy):
 def isurl(obj: str):
     """Returns True if an object is an internet URL"""
     return urllib.parse.urlparse(obj).scheme != '' #not in ('file','')
+
+DOWNLOAD_CHUNK_SIZE = 1024
+
+def download(url, proxies: dict | None):
+    """Returns same as urllib.request.urlopen() or None if URL is invalid"""
+    try:
+        opener = urllib.request.build_opener(urllib.request.ProxyHandler(proxies))
+        r = opener.open(str(url))
+        if r.status != 200: return
+        return r
+    except urllib.error.URLError as e:
+        qsend('error', 'cacheConnection', str(e))
+    except Exception as e:
+        qsend('error', 'cache', f'{type(e)}: {e}')
+
+def download_save(url, destination: Path | str, proxies: dict | None):
+    r = download(url, proxies)
+    if r:
+        with open(destination, 'wb') as f:
+            shutil.copyfileobj(r, f, DOWNLOAD_CHUNK_SIZE)
+        return True
+    return False
+
+class DownloadManager:
+    @property
+    def proxy(self):
+        return self._proxy
+
+    @proxy.setter
+    def proxy(self, value: str | None):
+        self._proxy = value
+        if value == None:
+            self.proxies = {}
+        else:
+            self.proxies = {
+                "http": value,
+                "https": value,
+            }
+    
+    def __init__(self, proxy: str | None = None):
+        self.proxies = {}
+        self._proxy: str | None = None
+        self.proxy = proxy
+    
+    def download_save(self, url, dest):
+        return download_save(url, dest, self.proxies)
