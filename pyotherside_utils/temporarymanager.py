@@ -5,6 +5,8 @@ from pathlib import Path
 
 from . import qsend, DownloadManager
 
+__ALL__ = ['TemporaryManager']
+
 class TemporaryManager(DownloadManager):
     """HACK: StandardPaths.Temporary uses private-tmp (in other words /tmp is separated between apps in sailijail), so we manage our own temporary folder"""
 
