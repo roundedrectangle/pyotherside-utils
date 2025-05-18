@@ -39,7 +39,7 @@ def ensure_data_from_exc(data: T | DataFromException | Any, e: Exception, check_
         return str(data(e))
     return data
 
-def show_error(name, info = '', other = None):
+def show_error(name, info: Any = '', other = None):
     qsend('error', name, str(info), other)
 
 @dataclass
@@ -57,15 +57,20 @@ class ExceptionHandlingInfo:
             ensure_data_from_exc(self.other, e, check_callable=True)
         )
 
-# def exception_safe(exc: type[Exception] | tuple[type[Exception]], name = None, other: DataFromException | Any = None, return_on_exc: DataFromException | Any = None):
-def exception_safe(exceptions: dict[type[Exception], ExceptionHandlingInfo | str | None] | type[Exception] | tuple[type[Exception]]):
+def exceptions_to_dict(exceptions: dict[type[Exception], ExceptionHandlingInfo | str | None] | type[Exception] | tuple[type[Exception], ...]) -> dict:
     if isinstance(exceptions, type(Exception)):
-        exceptions = (exceptions,)
+        exceptions = {exceptions: None}
     if isinstance(exceptions, tuple):
         exceptions = {e: None for e in exceptions}
-    if TYPE_CHECKING:
-        # HACK for typing
+    if TYPE_CHECKING: # HACK for type checking
         exceptions = {}
+
+    return exceptions # pyright:ignore[reportReturnType]
+
+# def exception_safe(exc: type[Exception] | tuple[type[Exception]], name = None, other: DataFromException | Any = None, return_on_exc: DataFromException | Any = None):
+def exception_safe(exceptions: dict[type[Exception], ExceptionHandlingInfo | str | None] | type[Exception] | tuple[type[Exception], ...], *other_exceptions: type[Exception]):
+    exceptions = exceptions_to_dict(exceptions)
+    exceptions.update(exceptions_to_dict(other_exceptions))
     def wrapper(f):
         @functools.wraps(f)
         def new_f(*args, **kwargs):
