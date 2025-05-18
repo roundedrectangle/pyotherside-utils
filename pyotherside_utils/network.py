@@ -1,9 +1,6 @@
-from typing import Union
+import os, shutil
 from pathlib import Path
-import shutil
-import urllib.parse
-import urllib.request
-import urllib.error
+import urllib.parse, urllib.request, urllib.error
 
 from . import qsend
 
@@ -43,6 +40,12 @@ def download_save(url, destination: Path | str, proxies: dict | None):
             shutil.copyfileobj(r, f, DOWNLOAD_CHUNK_SIZE)
         return True
     return False
+
+def get_extension_from_url(url: str, default='png'):
+    res = os.path.splitext(urllib.parse.urlparse(url).path)[1]
+    if res.startswith('.'): # removeprefix() was sadly introduced in python 3.9
+        res = res[1:]
+    return res or default
 
 class DownloadManager:
     @property
