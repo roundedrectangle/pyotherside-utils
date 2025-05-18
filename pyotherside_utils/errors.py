@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Callable, TypeVar
+from typing import TYPE_CHECKING, Any, Callable, TypeVar
 import json
 import functools
 import traceback as tb
@@ -39,7 +39,7 @@ def ensure_data_from_exc(data: T | DataFromException | Any, e: Exception, check_
         return str(data(e))
     return data
 
-def show_error(name, info: Any = '', other = None):
+def show_error(name, info = '', other = None):
     qsend('error', name, str(info), other)
 
 @dataclass
@@ -58,7 +58,14 @@ class ExceptionHandlingInfo:
         )
 
 # def exception_safe(exc: type[Exception] | tuple[type[Exception]], name = None, other: DataFromException | Any = None, return_on_exc: DataFromException | Any = None):
-def exception_safe(exceptions: dict[type[Exception], ExceptionHandlingInfo | str]):
+def exception_safe(exceptions: dict[type[Exception], ExceptionHandlingInfo | str | None] | type[Exception] | tuple[type[Exception]]):
+    if isinstance(exceptions, type(Exception)):
+        exceptions = (exceptions,)
+    if isinstance(exceptions, tuple):
+        exceptions = {e: None for e in exceptions}
+    if TYPE_CHECKING:
+        # HACK for typing
+        exceptions = {}
     def wrapper(f):
         @functools.wraps(f)
         def new_f(*args, **kwargs):
@@ -71,6 +78,8 @@ def exception_safe(exceptions: dict[type[Exception], ExceptionHandlingInfo | str
                     if isinstance(handler, ExceptionHandlingInfo):
                         handler.show(e)
                         return handler.return_on_exc
+                    elif handler is None:
+                        pass
                     else:
                         show_error(handler)
                 else:
