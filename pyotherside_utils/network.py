@@ -2,7 +2,7 @@ import os, shutil
 from pathlib import Path
 import urllib.parse, urllib.request, urllib.error
 
-from . import qsend
+from . import show_error
 
 def convert_proxy(proxy):
     if not proxy:
@@ -29,9 +29,9 @@ def download(url, proxies: dict | None):
         if r.status != 200: return
         return r
     except urllib.error.URLError as e:
-        qsend('error', 'cacheConnection', str(e))
+        show_error('cacheConnection', e)
     except Exception as e:
-        qsend('error', 'cache', f'{type(e)}: {e}')
+        show_error('cache', f'{type(e)}: {e}')
 
 def download_save(url, destination: Path | str, proxies: dict | None):
     r = download(url, proxies)
