@@ -39,7 +39,7 @@ def ensure_data_from_exc(data: T | DataFromException | Any, e: Exception, check_
         return str(data(e))
     return data
 
-def show_error(name, info = '', other = None):
+def show_error(name, info: Any = '', other = None):
     qsend('error', name, str(info), other)
 
 @dataclass
