@@ -7,6 +7,7 @@ from .errors import *
 from .network import *
 from .configbase import *
 from .temporarymanager import *
+from .fs import *
 
 def sha256(data: str):
     return hashlib.sha256(data.encode()).hexdigest()
