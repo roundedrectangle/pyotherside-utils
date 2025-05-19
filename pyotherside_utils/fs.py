@@ -3,6 +3,11 @@ from __future__ import annotations
 from pathlib import Path
 from datetime import datetime, timedelta, timezone
 
+__ALL__ = [
+    'update_required',
+    'find_file',
+]
+
 def update_required(path: Path, minimum_time: timedelta):
     """Returns if the file at `path` was modified more or `minimum_time` ago."""
     mod = datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc)
@@ -21,3 +26,4 @@ def find_file(path: Path | str, name: str, extension: str | None = None, default
                 return f
         extension = default_extension
     return path / f"{name}.{extension}"
+
