@@ -1,4 +1,6 @@
 {
     "pythonVersion": "3.8",
     "typeCheckingMode": "standard",
+
+    "reportRedeclaration": false,
 }
