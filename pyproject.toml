@@ -14,6 +14,11 @@ classifiers = [
 license = "MIT"
 license-files = ["LICEN[CS]E*"]
 
+# dependencies = []
+
+[project.optional-dependencies]
+httpx = ["httpx"]
+
 [project.urls]
 Homepage = "https://github.com/roundedrectangle/pyotherside-utils"
 Issues = "https://github.com/roundedrectangle/pyotherside-utils/issues"
