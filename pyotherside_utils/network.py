@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-import os, shutil
+import os
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterator
+from typing import TYPE_CHECKING, Any, Iterator, BinaryIO, TextIO
 import urllib.parse, urllib.request, urllib.error
 
 try:
@@ -57,12 +57,12 @@ def stream_urllib(url, proxies=None, user_agent=None):
     except Exception as e:
         show_error('cache', f'{type(e)}: {e}')
 
-def stream_httpx(url, proxies=None, client: httpx.Client | None = None, user_agent=None):
+def stream_httpx(url, proxy=None, client: httpx.Client | None = None, user_agent=None):
     headers = {'User-Agent': user_agent} if user_agent is not None else None
     if client:
         context = client.stream('get', url, headers=headers)
     elif HTTPX_AVAILABLE:
-        context = httpx.stream('get', url, headers=headers, proxy=proxies)
+        context = httpx.stream('get', url, headers=headers, proxy=proxy)
     else: return
     with context as r:
         for chunk in r.iter_bytes(DOWNLOAD_CHUNK_SIZE):
@@ -85,35 +85,42 @@ if HTTPX_AVAILABLE:
     stream_httpx = exception_safe({httpx.HTTPError: ExceptionHandlingInfo('cacheConnection', DataFromException.str_exception)})(stream_httpx) # pyright:ignore[reportAssignmentType]
 stream_httpx = exception_safe({Exception: ExceptionHandlingInfo('cache', lambda e: f'{type(e)}: {e}')})(stream_httpx) # pyright:ignore[reportAssignmentType]
 
-def save_iterator(iterator: Iterator[bytes | str] | None, destination: Path | str):
-    os.remove(destination)
+def save_iterator(iterator: Iterator[bytes | str] | None, destination: Path | str, return_data = False):
     if iterator:
-        for chunk in iterator:
-            with open(destination, 'a' + ('b' if isinstance(chunk, bytes) else '')) as f:
-                f.write(chunk)
-        return True
-    return False
-
-def save_file_like(file, destination: Path | str):
-    if file:
+        data = b''
         with open(destination, 'wb') as f:
-            shutil.copyfileobj(file, f, DOWNLOAD_CHUNK_SIZE)
-        return True
-    return False
+            for chunk in iterator:
+                f.write(chunk.encode() if isinstance(chunk, str) else chunk)
+                if return_data:
+                    data += chunk.encode() if isinstance(chunk, str) else chunk
+        return data if return_data else True
+
+def save_file_like(file: BinaryIO | TextIO | Any, destination: Path | str, return_data = False):
+    if file:
+        data: bytes = b''
+        with open(destination, 'wb') as f:
+            while buf := file.read(DOWNLOAD_CHUNK_SIZE):
+                buf = buf.encode() if isinstance(buf, str) else buf
+                f.write(buf)
+                if return_data:
+                    data += buf
+        return data if return_data else True
 
 def download_save(
     url,
     destination: Path | str,
     proxies: dict | None = None,
+    single_proxy: str | None = None,
     user_agent: str | None = None,
     httpx_client: httpx.Client | None = None,
+    return_data = False,
 ):
     if httpx_client or HTTPX_AVAILABLE:
-        return save_iterator(stream_httpx(url, proxies, httpx_client, user_agent), destination)
+        return save_iterator(stream_httpx(url, single_proxy, httpx_client, user_agent), destination, return_data)
     elif REQUESTS_AVAILABLE:
-        return save_iterator(stream_requests(url, proxies, user_agent), destination)
+        return save_iterator(stream_requests(url, proxies, user_agent), destination, return_data)
     else:
-        return save_file_like(stream_urllib(url, proxies, user_agent), destination)
+        return save_file_like(stream_urllib(url, proxies, user_agent), destination, return_data)
 
 def get_extension_from_url(url: str, default='png'):
     res = os.path.splitext(urllib.parse.urlparse(url).path)[1]
@@ -128,15 +135,16 @@ class DownloadManager:
 
     @proxy.setter
     def proxy(self, value: str | None):
+        value = convert_proxy(value)
         self._proxy = value
         if value == None:
             self.proxies = {}
         else:
             self.proxies = {
-                "http": value,
-                "https": value,
+                'http': value,
+                'https': value,
             }
-    
+
     def __init__(self, proxy: str | None = None, user_agent: str | None = None, httpx_client: httpx.Client | None = None):
         self.proxies = {}
         self._proxy: str | None = None
@@ -144,5 +152,5 @@ class DownloadManager:
         self.user_agent = user_agent
         self.httpx_client = httpx_client
     
-    def download_save(self, url, dest):
-        return download_save(url, dest, self.proxies, self.user_agent, self.httpx_client)
+    def download_save(self, url, dest, return_data):
+        return download_save(url, dest, self.proxies, self.proxy, self.user_agent, self.httpx_client, return_data)
