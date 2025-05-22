@@ -137,11 +137,12 @@ class DownloadManager:
                 "https": value,
             }
     
-    def __init__(self, proxy: str | None = None, user_agent: str | None = None):
+    def __init__(self, proxy: str | None = None, user_agent: str | None = None, httpx_client: httpx.Client | None = None):
         self.proxies = {}
         self._proxy: str | None = None
         self.proxy = proxy
         self.user_agent = user_agent
+        self.httpx_client = httpx_client
     
     def download_save(self, url, dest):
-        return download_save(url, dest, self.proxies, self.user_agent)
+        return download_save(url, dest, self.proxies, self.user_agent, self.httpx_client)

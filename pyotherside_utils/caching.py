@@ -4,11 +4,14 @@ from __future__ import annotations
 
 from pathlib import Path
 from datetime import timedelta
-from typing import Iterable, Union, Optional
+from typing import TYPE_CHECKING, Iterable
 
 from . import qsend, show_error
 from .network import DownloadManager
 from .fs import update_required
+
+if TYPE_CHECKING:
+    import httpx
 
 DefaultUpdatePeriodMapping = (
     None, # Never
@@ -47,8 +50,9 @@ class CacherBase(DownloadManager):
         update_period_mapping: Iterable[timedelta | None] = DefaultUpdatePeriodMapping,
         proxy: str | None = None,
         user_agent: str | None = None,
+        httpx_client: httpx.Client | None = None
     ):
-        super().__init__(proxy, user_agent)
+        super().__init__(proxy, user_agent, httpx_client)
 
         self._update_period = None
         self.update_period_mapping = update_period_mapping
