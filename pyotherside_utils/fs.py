@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from datetime import datetime, timedelta, timezone
+from itertools import islice
 
 __ALL__ = [
     'update_required',
@@ -27,3 +28,10 @@ def find_file(path: Path | str, name: str, extension: str | None = None, default
         extension = default_extension
     return path / f"{name}.{extension}"
 
+def find_contents(path: Path | str):
+    path = Path(path)
+    while True:
+        if len(list(islice(path.iterdir(), 2))) != 1 or path.is_file():
+            break
+        path = next(path.iterdir())
+    return path
