@@ -7,5 +7,5 @@ from ._asyncio import *
 from .configbase import *
 from .temporarymanager import *
 from .fs import *
-from .caching import *
+from ._caching import *
 from .hashing import *
