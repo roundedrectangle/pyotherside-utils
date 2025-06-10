@@ -57,21 +57,21 @@ def stream_urllib(url, proxies=None, user_agent=None):
     except Exception as e:
         show_error('cache', f'{type(e)}: {e}')
 
-def stream_httpx(url, proxy=None, client: httpx.Client | None = None, user_agent=None):
+def stream_httpx(url, proxy=None, client: httpx.Client | None = None, user_agent=None, follow_redirects=True):
     headers = {'User-Agent': user_agent} if user_agent is not None else None
     if client:
-        context = client.stream('get', url, headers=headers)
+        context = client.stream('get', url, headers=headers, follow_redirects=follow_redirects)
     elif HTTPX_AVAILABLE:
-        context = httpx.stream('get', url, headers=headers, proxy=proxy)
+        context = httpx.stream('get', url, headers=headers, proxy=proxy, follow_redirects=follow_redirects)
     else: return
     with context as r:
         for chunk in r.iter_bytes(DOWNLOAD_CHUNK_SIZE):
             yield chunk
 
-def stream_requests(url, proxies=None, user_agent=None):
+def stream_requests(url, proxies=None, user_agent=None, follow_redirects=True):
     headers = {'User-Agent': user_agent} if user_agent is not None else None
     if REQUESTS_AVAILABLE:
-        try: r = requests.get(url, stream=True, proxies=proxies, headers=headers)
+        try: r = requests.get(url, stream=True, proxies=proxies, headers=headers, allow_redirects=follow_redirects)
         except requests.ConnectionError as e:
             show_error('cacheConnection', str(e))
             return
@@ -114,11 +114,12 @@ def download_save(
     user_agent: str | None = None,
     httpx_client: httpx.Client | None = None,
     return_data = False,
+    follow_redirects = True,
 ):
     if httpx_client or HTTPX_AVAILABLE:
-        return save_iterator(stream_httpx(url, single_proxy, httpx_client, user_agent), destination, return_data)
+        return save_iterator(stream_httpx(url, single_proxy, httpx_client, user_agent, follow_redirects), destination, return_data)
     elif REQUESTS_AVAILABLE:
-        return save_iterator(stream_requests(url, proxies, user_agent), destination, return_data)
+        return save_iterator(stream_requests(url, proxies, user_agent, follow_redirects), destination, return_data)
     else:
         return save_file_like(stream_urllib(url, proxies, user_agent), destination, return_data)
 
