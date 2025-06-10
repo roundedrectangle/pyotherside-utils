@@ -44,10 +44,10 @@ def autoincrement_file_path(path: Path | str):
     try:
         i = 2
         if path.exists():
-            path = path.with_stem(f'{path.stem} (2)')
+            path = path.with_name(f'{path.stem} (2){path.suffix or ""}')
         i += 1 # So if while loop is entered it will properly update path to be 3 instead of 2 and substract i-1 length without doing this 2 times
         while path.exists():
-            path = path.with_stem(path.stem[:-(3 + len(str(i-1)))] + f' ({i})')
+            path = path.with_name(path.stem[:-(3 + len(str(i-1)))] + f' ({i}){path.suffix or ""}')
             i += 1
     except (FileNotFoundError, PermissionError):
         pass
