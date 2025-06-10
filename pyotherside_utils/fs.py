@@ -39,7 +39,7 @@ def find_extracted_contents(path: Path | str):
 find_contents = find_extracted_contents # deprecated FIXME: remove this when i'll work on Utilities or whatever uses this
 
 #AUTOINCREMENTED_FILE_PATH_RE = re.compile(r'^.* \([1-9][0-9]*\)$')
-def autoincremented_file_path(path: Path | str):
+def autoincrement_file_path(path: Path | str):
     path = Path(path)
     try:
         i = 2
