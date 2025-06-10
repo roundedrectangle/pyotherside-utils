@@ -41,11 +41,14 @@ find_contents = find_extracted_contents # deprecated FIXME: remove this when i'l
 #AUTOINCREMENTED_FILE_PATH_RE = re.compile(r'^.* \([1-9][0-9]*\)$')
 def autoincremented_file_path(path: Path | str):
     path = Path(path)
-    i = 2
-    if path.exists():
-        path = path.with_stem(f'{path.stem} (2)')
-    i += 1 # So if while loop is entered it will properly update path to be 3 instead of 2 and substract i-1 length without doing this 2 times
-    while path.exists():
-        path = path.with_stem(path.stem[:-(3 + len(str(i-1)))] + f' ({i})')
-        i += 1
+    try:
+        i = 2
+        if path.exists():
+            path = path.with_stem(f'{path.stem} (2)')
+        i += 1 # So if while loop is entered it will properly update path to be 3 instead of 2 and substract i-1 length without doing this 2 times
+        while path.exists():
+            path = path.with_stem(path.stem[:-(3 + len(str(i-1)))] + f' ({i})')
+            i += 1
+    except (FileNotFoundError, PermissionError):
+        pass
     return path
