@@ -18,7 +18,7 @@ class TemporaryManager(DownloadManager):
 
     def save_temporary(self, url: str, filename: Path | str):
         dest = self.temp / filename
-        self.download_save(url, dest)
+        self.download_save(url, dest, False)
         return dest
 
     def clear_temporary(self):
