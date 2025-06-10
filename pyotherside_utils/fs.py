@@ -28,10 +28,12 @@ def find_file(path: Path | str, name: str, extension: str | None = None, default
         extension = default_extension
     return path / f"{name}.{extension}"
 
-def find_contents(path: Path | str):
+def find_extracted_contents(path: Path | str):
     path = Path(path)
     while True:
         if len(list(islice(path.iterdir(), 2))) != 1 or path.is_file():
             break
         path = next(path.iterdir())
     return path
+
+find_contents = find_extracted_contents # deprecated FIXME: remove this when i'll work on Utilities or whatever uses this
