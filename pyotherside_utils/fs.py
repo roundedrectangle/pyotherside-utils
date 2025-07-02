@@ -36,8 +36,6 @@ def find_extracted_contents(path: Path | str):
         path = next(path.iterdir())
     return path
 
-find_contents = find_extracted_contents # deprecated FIXME: remove this when i'll work on Utilities or whatever uses this
-
 #AUTOINCREMENTED_FILE_PATH_RE = re.compile(r'^.* \([1-9][0-9]*\)$')
 def autoincrement_file_path(path: Path | str):
     path = Path(path)
