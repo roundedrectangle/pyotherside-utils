@@ -3,7 +3,7 @@ from __future__ import annotations
 import shutil
 from pathlib import Path
 
-from . import qsend, DownloadManager
+from .network import DownloadManager
 
 __ALL__ = ['TemporaryManager']
 
@@ -13,16 +13,22 @@ class TemporaryManager(DownloadManager):
     def __init__(self, cache: Path | str, proxy: str | None = None, user_agent: str | None = None):
         super().__init__(proxy, user_agent)
         self.temp = Path(cache) / 'temporary'
-        self.clear_temporary()
-        self.recreate_temporary()
+        self.clear()
+        self.create()
 
-    def save_temporary(self, url: str, filename: Path | str):
+    def save(self, url: str, filename: str):
         dest = self.temp / filename
         self.download_save(url, dest, False)
         return dest
 
-    def clear_temporary(self):
+    def save_contents(self, contents: str, filename: str):
+        dest = self.temp / filename
+        with open(dest, 'w') as f:
+            f.write(contents)
+        return dest
+
+    def clear(self):
         shutil.rmtree(self.temp, ignore_errors=True)
     
-    def recreate_temporary(self):
+    def create(self):
         self.temp.mkdir(parents=True, exist_ok=True)
