@@ -20,6 +20,9 @@ class TemporaryManager(DownloadManager):
         dest = self.temp / filename
         self.download_save(url, dest, False)
         return dest
+    
+    def open(self, filename: str, mode: str = 'w'):
+        return open(self.temp / filename, mode)
 
     def save_contents(self, contents: str, filename: str):
         dest = self.temp / filename
