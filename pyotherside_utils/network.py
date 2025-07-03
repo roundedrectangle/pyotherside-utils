@@ -85,22 +85,37 @@ if HTTPX_AVAILABLE:
     stream_httpx = exception_safe({httpx.HTTPError: ExceptionHandlingInfo('cacheConnection', DataFromException.str_exception)})(stream_httpx) # pyright:ignore[reportAssignmentType]
 stream_httpx = exception_safe({Exception: ExceptionHandlingInfo('cache', lambda e: f'{type(e)}: {e}')})(stream_httpx) # pyright:ignore[reportAssignmentType]
 
+def ensure_bytes(data: str | bytes):
+    return data.encode() if isinstance(data, str) else data
+
 def save_iterator(iterator: Iterator[bytes | str] | None, destination: Path | str, return_data = False):
     if iterator:
         data = b''
+        first_chunk = next(iterator, None) # in case an error occurs, we haven't opened the file yet and it won't be overwritten
         with open(destination, 'wb') as f:
-            for chunk in iterator:
-                f.write(chunk.encode() if isinstance(chunk, str) else chunk)
+            if first_chunk is not None:
+                decoded_first = ensure_bytes(first_chunk)
+                f.write(decoded_first)
                 if return_data:
-                    data += chunk.encode() if isinstance(chunk, str) else chunk
+                    data += decoded_first
+            for chunk in iterator:
+                decoded = ensure_bytes(chunk)
+                f.write(decoded)
+                if return_data:
+                    data += decoded
         return data if return_data else True
 
 def save_file_like(file: BinaryIO | TextIO | Any, destination: Path | str, return_data = False):
     if file:
         data: bytes = b''
+        buf = file.read(DOWNLOAD_CHUNK_SIZE) # in case an error occurs, we haven't opened the file yet and it won't be overwritten
         with open(destination, 'wb') as f:
+            buf = ensure_bytes(buf)
+            f.write(buf)
+            if return_data:
+                data += buf
             while buf := file.read(DOWNLOAD_CHUNK_SIZE):
-                buf = buf.encode() if isinstance(buf, str) else buf
+                buf = ensure_bytes(buf)
                 f.write(buf)
                 if return_data:
                     data += buf
