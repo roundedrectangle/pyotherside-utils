@@ -25,10 +25,9 @@ class TemporaryManager(DownloadManager):
         return open(self.temp / filename, mode)
 
     def save_contents(self, contents: str, filename: str):
-        dest = self.temp / filename
-        with open(dest, 'w') as f:
+        with self.open(filename, 'w') as f:
             f.write(contents)
-        return dest
+            return Path(f.name)
 
     def clear(self):
         shutil.rmtree(self.temp, ignore_errors=True)
